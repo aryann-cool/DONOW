@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Himalayan Royals - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #1e293b;
+            background-image: linear-gradient(to bottom right, #1e293b, #0f172a);
+            color: #ffffff;
+        }
+
+        #main-admin-container {
+            background-color: #2D3E50;
+            border: 2px solid #FFD700;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .hamburger-icon span {
+            display: block;
+            width: 30px;
+            height: 3px;
+            background-color: #FFD700;
+            margin: 6px 0;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .notification-item {
+            background-color: #374151;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s;
+        }
+
+        .notification-item.unread {
+            background-color: #4B5EAA;
+            border-left: 4px solid #FFD700;
+        }
+
+        .notification-item:hover {
+            background-color: #4B5563;
+        }
+
+        .btn {
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div id="main-admin-container" class="relative w-full max-w-2xl mx-auto p-4 md:p-6 rounded-xl shadow-2xl flex-col items-center">
+        <div class="w-full flex justify-between items-center mb-6">
+            <div class="text-center w-full">
+                <h1 class="text-3xl font-bold text-yellow-500">Himalayan Royals - Admin Panel</h1>
+                <p class="text-lg font-semibold text-gray-300 mt-2">Withdrawal Notifications</p>
+            </div>
+            <button id="menu-btn" class="absolute top-4 right-4 z-50 p-2">
+                <div class="hamburger-icon">
+                    <span class="transition-transform"></span>
+                    <span class="transition-opacity"></span>
+                    <span class="transition-transform"></span>
+                </div>
+            </button>
+        </div>
+
+        <div id="sidebar" class="fixed top-0 right-0 w-64 h-full bg-gray-900 shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out z-40 p-6 flex flex-col">
+            <button id="close-menu-btn" class="self-end text-yellow-500 text-2xl font-bold">&times;</button>
+            <nav class="flex-grow flex flex-col justify-center space-y-4">
+                <a href="#notifications" class="nav-link text-white text-xl p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200" data-section="notifications">
+                    <i class="fas fa-bell mr-3"></i> Notifications
+                </a>
+                <a href="#logout" id="logout-btn" class="nav-link text-white text-xl p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                    <i class="fas fa-sign-out-alt mr-3"></i> Logout
+                </a>
+            </nav>
+        </div>
+
+        <div id="main-content-wrapper">
+            <div id="notifications-section" class="app-section transition-opacity duration-300">
+                <h2 class="text-2xl font-bold text-yellow-500 mb-4">Pending Withdrawal Requests</h2>
+                <ul id="admin-notification-list" class="space-y-2 text-gray-300"></ul>
+                <button id="clear-notifications-btn" class="w-full mt-4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-full shadow-lg btn">
+                    Clear All Notifications
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, orderBy, getDocs, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQ13SMnKS3-TzG1pC7RF_WlIuSx0bbl-k",
+            authDomain: "himalayan-royals-rewards.firebaseapp.com",
+            projectId: "himalayan-royals-rewards",
+            storageBucket: "himalayan-royals-rewards.firebasestorage.app",
+            messagingSenderId: "643140361069",
+            appId: "1:643140361069:web:5ebcbfa715c478b0d35864",
+            measurementId: "G-X7KYZNJC30"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Check admin authentication
+        onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // User is authenticated, load notifications
+        loadAdminNotifications();
+    } else {
+        // User is not authenticated, redirect to index.html
+        window.location.href = "index.html";
+    }
+});
+
+        async function loadAdminNotifications() {
+            const notificationsList = document.getElementById('admin-notification-list');
+            if (!notificationsList) return;
+
+            const q = query(collection(db, 'admin_notifications'), orderBy('createdAt', 'desc'));
+            try {
+                const querySnapshot = await getDocs(q);
+                notificationsList.innerHTML = '';
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const li = document.createElement('li');
+                    li.className = `notification-item ${data.read ? '' : 'unread'}`;
+                    li.innerHTML = `
+                        ${data.message} (Received: ${data.createdAt ? new Date(data.createdAt.toDate()).toLocaleString() : 'N/A'})
+                        <button class="mark-read-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded ml-2 btn" data-id="${doc.id}">
+                            Mark as Read
+                        </button>
+                    `;
+                    notificationsList.appendChild(li);
+                });
+
+                // Add event listeners for mark as read buttons
+                document.querySelectorAll('.mark-read-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const docId = e.target.dataset.id;
+                        const docRef = doc(db, 'admin_notifications', docId);
+                        await updateDoc(docRef, { read: true });
+                        loadAdminNotifications(); // Refresh list
+                    });
+                });
+            } catch (error) {
+                console.error("Error loading notifications:", error);
+                notificationsList.innerHTML = '<li>Error loading notifications. Please try again.</li>';
+            }
+        }
+
+        // Clear all notifications
+        const clearNotificationsBtn = document.getElementById('clear-notifications-btn');
+        if (clearNotificationsBtn) {
+            clearNotificationsBtn.addEventListener('click', async () => {
+                if (confirm("Are you sure you want to clear all notifications?")) {
+                    try {
+                        const q = query(collection(db, 'admin_notifications'));
+                        const querySnapshot = await getDocs(q);
+                        const batch = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+                        await Promise.all(batch);
+                        loadAdminNotifications(); // Refresh list
+                    } catch (error) {
+                        console.error("Error clearing notifications:", error);
+                        alert("Failed to clear notifications.");
+                    }
+                }
+            });
+        }
+
+        // Handle logout
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    await signOut(auth);
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error("Logout failed:", error);
+                    alert("Logout failed. Please try again.");
+                }
+            });
+        }
+
+        // Handle navigation and sidebar
+        const navLinks = document.querySelectorAll('.nav-link');
+        const mainContentWrapper = document.getElementById('main-content-wrapper');
+        if (navLinks.length > 0 && mainContentWrapper) {
+            const sections = mainContentWrapper.querySelectorAll('.app-section');
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetSectionId = e.target.dataset.section + '-section';
+                    sections.forEach(section => {
+                        section.classList.add('hidden');
+                        section.classList.remove('opacity-100');
+                        section.classList.add('opacity-0');
+                    });
+                    const targetSection = document.getElementById(targetSectionId);
+                    if (targetSection) {
+                        targetSection.classList.remove('hidden');
+                        setTimeout(() => {
+                            targetSection.classList.remove('opacity-0');
+                            targetSection.classList.add('opacity-100');
+                        }, 50);
+                    }
+                    document.getElementById('sidebar').classList.remove('translate-x-0');
+                    document.getElementById('sidebar').classList.add('translate-x-full');
+                    document.querySelector('.hamburger-icon span:nth-child(1)').style.transform = 'rotate(0deg) translate(0, 0)';
+                    document.querySelector('.hamburger-icon span:nth-child(2)').style.opacity = '1';
+                    document.querySelector('.hamburger-icon span:nth-child(3)').style.transform = 'rotate(0deg) translate(0, 0)';
+                });
+            });
+        }
+
+        const menuBtn = document.getElementById('menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const closeMenuBtn = document.getElementById('close-menu-btn');
+        if (menuBtn && sidebar && closeMenuBtn) {
+            menuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('translate-x-full');
+                sidebar.classList.toggle('translate-x-0');
+                const spans = document.querySelectorAll('.hamburger-icon span');
+                if (sidebar.classList.contains('translate-x-0')) {
+                    spans[0].style.transform = 'rotate(45deg) translate(8px, 8px)';
+                    spans[1].style.opacity = '0';
+                    spans[2].style.transform = 'rotate(-45deg) translate(8px, -8px)';
+                } else {
+                    spans[0].style.transform = 'rotate(0deg) translate(0, 0)';
+                    spans[1].style.opacity = '1';
+                    spans[2].style.transform = 'rotate(0deg) translate(0, 0)';
+                }
+            });
+            closeMenuBtn.addEventListener('click', () => {
+                sidebar.classList.remove('translate-x-0');
+                sidebar.classList.add('translate-x-full');
+                const spans = document.querySelectorAll('.hamburger-icon span');
+                spans[0].style.transform = 'rotate(0deg) translate(0, 0)';
+                spans[1].style.opacity = '1';
+                spans[2].style.transform = 'rotate(0deg) translate(0, 0)';
+            });
+        }
+    </script>
+</body>
+</html>

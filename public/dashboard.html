@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Himalayan Royals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        /* CSS from himalayan-royals.css */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #1e293b; /* A deep, rich blue for a royal feel */
+            background-image: linear-gradient(to bottom right, #1e293b, #0f172a);
+        }
+
+        /* Confetti canvas on top of everything */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Main app container styling */
+        #main-app-container {
+            background-color: #2D3E50;
+            border: 2px solid #FFD700;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Custom styles for the spin wheel container */
+        .wheel-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #fff;
+            transition: transform 4s cubic-bezier(0.2, 0.9, 0.4, 1.0); /* Spinning animation */
+        }
+
+        /* Custom styles for the pointer/arrow */
+        .pointer {
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 40px solid #FFD700; /* Gold color */
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        /* Spin button animation for hover and active states */
+        .spin-btn-anim:hover {
+            box-shadow: 0 0 20px #FFD700;
+        }
+        .spin-btn-anim:active {
+            transform: scale(0.95);
+        }
+
+        /* Winning segment animation */
+        .winning-animation {
+            animation: pulse-border 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0px rgba(255, 215, 0, 0.7); }
+            50% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
+            100% { box-shadow: 0 0 0 0px rgba(255, 215, 0, 0); }
+        }
+
+        /* Styles for the hamburger menu icon */
+        .hamburger-icon span {
+            display: block;
+            width: 30px;
+            height: 3px;
+            background-color: #FFD700;
+            margin: 6px 0;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* Light Bulb Styling */
+        .light-bulb {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #FFD700; /* Gold color */
+            box-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700;
+            z-index: 1; /* Place below the canvas */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <canvas id="confetti-canvas"></canvas>
+    <div id="main-app-container" class="relative w-full max-w-sm mx-auto p-4 md:p-6 rounded-xl shadow-2xl flex-col items-center">
+        <div class="w-full flex justify-between items-center mb-6">
+            <div class="text-center w-full">
+                <h1 class="text-3xl font-bold text-yellow-500">Himalayan Royals</h1>
+                <p class="text-lg font-semibold text-gray-300 mt-2">Balance: <span id="xd-balance">0</span> XD</p>
+                <div id="user-info" class="text-sm text-gray-400 mt-1">
+                    <p>Welcome, <span id="user-username">Guest</span>!</p>
+                </div>
+            </div>
+            <button id="menu-btn" class="absolute top-4 right-4 z-50 p-2">
+                <div class="hamburger-icon">
+                    <span class="transition-transform"></span>
+                    <span class="transition-opacity"></span>
+                    <span class="transition-transform"></span>
+                </div>
+            </button>
+        </div>
+
+        <div id="sidebar" class="fixed top-0 right-0 w-64 h-full bg-gray-900 shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out z-40 p-6 flex flex-col">
+            <button id="close-menu-btn" class="self-end text-yellow-500 text-2xl font-bold">&times;</button>
+            <nav class="flex-grow flex flex-col justify-center space-y-4">
+                <a href="#spin" class="nav-link text-white text-xl p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200" data-section="spin">
+                    <i class="fas fa-gem mr-3"></i> Spin & Win
+                </a>
+                <a href="#withdraw" class="nav-link text-white text-xl p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200" data-section="withdraw">
+                 <i class="fas fa-money-bill-wave mr-3"></i> Withdraw
+                </a> 
+
+                <a href="#profile" class="nav-link text-white text-xl p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200" data-section="profile">
+                    <i class="fas fa-user mr-3"></i> Profile
+                </a>
+                <a href="#referral" class="nav-link text-white text-xl p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200" data-section="referral">
+                    <i class="fas fa-share-alt mr-3"></i> Referral
+                </a>
+                <a href="#notifications" class="nav-link text-white text-xl p-3 rounded-lg hover:bg-gray-700 transition-colors duration-200" data-section="notifications">
+                    <i class="fas fa-bell mr-3"></i> Notifications
+                </a>
+
+            </nav>
+            <button id="logout-btn" class="w-full mt-auto bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95">
+                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+            </button>
+        </div>
+
+        <div id="main-content-wrapper">
+            <div id="spin-section" class="app-section transition-opacity duration-300">
+                <div class="relative w-[350px] h-[350px] flex items-center justify-center mx-auto mb-6">
+                    <div class="wheel-container" id="wheel-container">
+                        <canvas id="wheelCanvas" width="350" height="350"></canvas>
+                    </div>
+                    <div class="pointer"></div>
+                </div>
+                <button id="spin-btn" class="spin-btn-anim w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95">
+                    Spin for 999 XD
+                </button>
+                <button id="watch-ad-btn" class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
+                onclick="s=document.createElement('script');s.src='https://fpyf8.com/88/tag.min.js';s.setAttribute('data-zone','163258');s.async=true;s.setAttribute('data-cfasync','false');document.body.appendChild(s);">
+                    Watch Ad for Free Spin
+                </button>
+                <p id="spin-message" class="text-center text-white mt-4 text-sm"></p>
+
+            </div>
+<div id="withdraw-section" class="app-section hidden p-6">
+    <h2 class="text-xl font-bold mb-4 text-white">Withdraw Robux</h2>
+    <form id="withdraw-form" class="space-y-4">
+        <div>
+            <label class="block text-white mb-1">Amount (RBX)</label>
+            <input type="number" id="redeem-amount-rbx" class="w-full p-2 rounded" min="7" placeholder="Enter amount in RBX" oninput="calculateWithdrawAmounts()" required />
+        </div>
+        <div>
+            <label class="block text-white mb-1">Your Roblox Username</label>
+            <input type="text" id="roblox-username" class="w-full p-2 rounded" placeholder="Enter your Roblox username" required />
+        </div>
+        <div class="text-white">
+            <p>XD Needed: <span id="xd-deducted-amount">0</span></p>
+            <p>Gamepass Value to Create: <span id="gamepass-amount">0</span> RBX</p>
+        </div>
+        <button id="withdraw-btn" type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded w-full">
+            Submit Withdraw Request
+        </button>
+    </form>
+</div>
+
+            <div id="profile-section" class="app-section hidden transition-opacity duration-300">
+                <h2 class="text-2xl font-bold text-yellow-500 mb-4">Profile</h2>
+                <div class="space-y-4 text-gray-300">
+                    <p><strong>Username:</strong> <span id="profile-username">...</span></p>
+                    <p><strong>Balance:</strong> <span id="profile-xd-balance">...</span> XD</p>
+                    <p><strong>Referral Code:</strong> <span id="profile-user-referral-code">...</span></p>
+                    <p><strong>Referred By:</strong> <span id="profile-referred-by">...</span></p>
+                </div>
+            </div>
+
+            <div id="referral-section" class="app-section hidden transition-opacity duration-300">
+                <h2 class="text-2xl font-bold text-yellow-500 mb-4">Refer & Earn</h2>
+                <div class="bg-gray-700 p-4 rounded-lg shadow-inner">
+                    <p class="text-gray-300 mb-2">Share your code to earn a bonus when a friend joins:</p>
+                    <div class="flex items-center space-x-2">
+                        <span id="referral-code-display" class="font-mono text-lg text-yellow-400 p-2 bg-gray-800 rounded flex-grow"></span>
+                        <button id="copy-referral-btn" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="notifications-section" class="app-section hidden transition-opacity duration-300">
+                <h2 class="text-2xl font-bold text-yellow-500 mb-4">Notifications</h2>
+                <ul id="notification-list" class="space-y-2 text-gray-300">
+                    </ul>
+                <button id="clear-notifications-btn" class="w-full mt-4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95">
+                    Clear Notifications
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>

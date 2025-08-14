@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Himalayan Rewards - Welcome</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap');
+
+    /* Colors */
+    :root {
+      --golden: #d4af37;
+      --black: #111111;
+      --white: #ffffff;
+      --golden-light: #f7e7a7;
+      --shadow: rgba(212, 175, 55, 0.4);
+    }
+
+    /* Reset and base */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Montserrat', sans-serif;
+      background-color: var(--black);
+      color: var(--white);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .outer-container {
+      background: linear-gradient(135deg, var(--golden-light), var(--golden));
+      border-radius: 20px;
+      padding: 40px 50px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 30px var(--shadow);
+      text-align: center;
+      animation: fadeIn 1s ease forwards;
+      color: var(--black);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      font-weight: 800;
+      font-size: 2.8rem;
+      margin-bottom: 20px;
+      letter-spacing: 1.5px;
+    }
+
+    p {
+      font-weight: 400;
+      font-size: 1.2rem;
+      margin-bottom: 35px;
+      line-height: 1.6;
+    }
+
+    .cta-button {
+      background-color: var(--black);
+      color: var(--golden);
+      font-weight: 700;
+      font-size: 1.15rem;
+      padding: 15px 45px;
+      text-decoration: none;
+      border-radius: 40px;
+      box-shadow: 0 6px 15px var(--shadow);
+      display: inline-block;
+      transition: all 0.3s ease;
+      letter-spacing: 1px;
+    }
+
+    .cta-button:hover {
+      background-color: var(--golden);
+      color: var(--black);
+      box-shadow: 0 10px 25px var(--shadow);
+      transform: translateY(-4px);
+    }
+
+    /* Responsive font scaling */
+    @media (max-width: 400px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .cta-button {
+        padding: 12px 30px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="outer-container">
+    <h1>Welcome to Himalayan Rewards</h1>
+    <p>Unlock exclusive rewards and benefits by joining our community. Earn XD, spin the wheel, and more!</p>
+    <a href="join.html" class="cta-button">Get Started</a>
+  </div>
+  <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBQ13SMnKS3-TzG1pC7RF_WlIuSx0bbl-k",
+    authDomain: "himalayan-royals-rewards.firebaseapp.com",
+    projectId: "himalayan-royals-rewards",
+    storageBucket: "himalayan-royals-rewards.firebasestorage.app",
+    messagingSenderId: "643140361069",
+    appId: "1:643140361069:web:f4d68563f4baa501d35864",
+    measurementId: "G-NNY9GP5KYF"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+</body>
+</html>

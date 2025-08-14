@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Join - Himalayan Royals</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #1e293b;
+      background-image: linear-gradient(to bottom right, #1e293b, #0f172a);
+    }
+    .loading {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+    }
+    .loading.show {
+      display: flex;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+  <div class="loading" id="loading">
+    <div class="animate-spin h-8 w-8 border-4 border-yellow-500 border-t-transparent rounded-full"></div>
+  </div>
+  <div class="w-full max-w-sm mx-auto p-6 bg-gray-800 rounded-xl shadow-2xl border-2 border-yellow-500">
+    <h1 class="text-3xl font-bold text-yellow-500 text-center mb-6">Welcome to Himalayan Royals</h1>
+    <button id="googleLoginBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95">
+      <i class="fas fa-sign-in-alt mr-2"></i> Login with Google
+    </button>
+    <div class="text-center mt-4 text-gray-400 text-sm">
+      <p>By logging in, you agree to our <a href="#" class="text-yellow-500 hover:underline" data-section="policy">Terms & Policy</a></p>
+    </div>
+  </div>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"></script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
