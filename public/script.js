@@ -1,15 +1,15 @@
 // Import the required Firebase services.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { 
-    getAuth, 
+import {
+    getAuth,
     GoogleAuthProvider,
     signInWithPopup,
     onAuthStateChanged,
     signOut
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { 
-    getFirestore, 
-    doc, 
+import {
+    getFirestore,
+    doc,
     setDoc,
     updateDoc,
     getDoc,
@@ -44,7 +44,7 @@ const analytics = getAnalytics(app);
 
 let userId = '';
 let userEmail = '';
-let xdBalance = 0;
+let xdBalance = 100000;
 let userReferralCode = '';
 let referredBy = null;
 let isSpinning = false;
@@ -87,7 +87,7 @@ const segments = [
 ];
 
 const totalChance = segments.reduce((sum, seg) => sum + seg.chance, 0);
-const spinCost = 9999;
+const spinCost = 999;
 
 // Function to generate a random referral code
 function generateReferralCode() {
@@ -235,7 +235,7 @@ function updateDashboardUI(userData) {
     // Update other dashboard sections as needed
     const profileUsername = document.getElementById('profile-username');
     if (profileUsername) profileUsername.textContent = userData.displayName || 'User';
-    
+
     const profileXdBalance = document.getElementById('profile-xd-balance');
     if (profileXdBalance) profileXdBalance.textContent = userData.xd;
 
@@ -244,7 +244,7 @@ function updateDashboardUI(userData) {
 
     const referralCodeDisplay = document.getElementById('referral-code-display');
     if (referralCodeDisplay) referralCodeDisplay.textContent = userData.userReferralCode;
-    
+
     const profileReferredBy = document.getElementById('profile-referred-by');
     if (profileReferredBy) profileReferredBy.textContent = userData.referredBy || 'N/A';
 }
@@ -273,7 +273,7 @@ if (wheelCanvas) {
         const centerY = wheelCanvas.height / 2;
         const radius = wheelCanvas.width / 2;
         ctx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
-        
+
         segments.forEach(segment => {
             const sweepAngle = (2 * Math.PI) / segments.length;
             ctx.beginPath();
@@ -282,7 +282,7 @@ if (wheelCanvas) {
             ctx.closePath();
             ctx.fillStyle = segment.color;
             ctx.fill();
-            
+
             // Draw text
             ctx.save();
             ctx.translate(centerX, centerY);
@@ -292,95 +292,34 @@ if (wheelCanvas) {
             ctx.font = 'bold 16px Poppins';
             ctx.fillText(segment.text, radius - 20, 5);
             ctx.restore();
-            
+
             startAngle += sweepAngle;
         });
     }
-    
+
     drawWheel();
-    
-    function spinWheel() {
-    if (isSpinning) return;
 
-    if (xdBalance < spinCost) {
-        spinMessageEl.textContent = "Not enough XD. Watch an ad for a free spin!";
-        return;
-    }
+    //Spinning wheel logic
 
-    isSpinning = true;
-    spinBtn.disabled = true;
-    watchAdBtn.disabled = true;
-    spinMessageEl.textContent = "";
+    //the "free" variable determines if the user got a free spin or not
+    let free = false;
+    let fullSpinAngle = 0; // make the wheel spin 10 times
+    let finalAngle = 0; //made the finalAngle variable global so it won't reset on every call
 
-    // --- Pick winning segment FIRST ---
-    const randomChance = Math.random() * totalChance;
-    let cumulativeChance = 0;
-    let winningSegment = null;
-    for (const segment of segments) {
-        cumulativeChance += segment.chance;
-        if (randomChance < cumulativeChance) {
-            winningSegment = segment;
-            break;
-        }
-    }
-
-    // Deduct spin cost
-    updateXdBalance(xdBalance - spinCost);
-
-    // Calculate rotation
-    const winningSegmentIndex = segments.indexOf(winningSegment);
-    const segmentsAngle = 360 / segments.length;
-    const landingAngle = winningSegmentIndex * segmentsAngle + (segmentsAngle / 2);
-    const finalAngle = 360 * 10 + landingAngle;
-
-    wheelContainer.style.transform = `rotate(${finalAngle}deg)`;
-
-    setTimeout(() => {
-        // Add winnings
-        updateXdBalance(xdBalance + winningSegment.value);
-
-        isSpinning = false;
-        spinBtn.disabled = false;
-        watchAdBtn.disabled = false;
-
-        spinMessageEl.textContent =
-            winningSegment.text === 'Jackpot'
-                ? `Congratulations! You won the Jackpot!`
-                : `Congratulations! You won ${winningSegment.text}!`;
-
-    }, 4000);
-}
-
-    
-    // Placeholder for ad functionality
-    // Trigger ad when "Watch Ad" button is clicked
-   // --- Replace your old watchAd() function with this ---
-function watchAd() {
-    // Load Monetag ad script dynamically
-    let s = document.createElement('script');
-    s.src = 'https://fpyf8.com/88/tag.min.js';
-    s.setAttribute('data-zone', '163258');
-    s.async = true;
-    s.setAttribute('data-cfasync', 'false');
-    document.body.appendChild(s);
-
-    // Wait for ad duration before giving free spin
-    setTimeout(() => {
-        alert("You've earned a free spin!");
-        spinBtn.textContent = 'Spin (Free)';
-        spinBtn.disabled = false;
-        watchAdBtn.disabled = true;
-        spinBtn.removeEventListener('click', spinWheel);
-        spinBtn.addEventListener('click', spinWheelForFree);
-    }, 5000); // Change 5000 to match your ad length in ms
-}
-
-    function spinWheelForFree() {
+    function spinWheel(free) {
         if (isSpinning) return;
+        //spins the wheel only when balance>cost or when free is "true"
+        if ((xdBalance < spinCost) && free == false) {
+            spinMessageEl.textContent = "Not enough XD. Watch an ad for a free spin!";
+            return;
+        }
+
         isSpinning = true;
         spinBtn.disabled = true;
+        watchAdBtn.disabled = true;
         spinMessageEl.textContent = "";
 
+        // --- Pick winning segment FIRST ---
         const randomChance = Math.random() * totalChance;
         let cumulativeChance = 0;
         let winningSegment = null;
@@ -391,38 +330,117 @@ function watchAd() {
                 break;
             }
         }
-        
+
+        // Deduct spin cost
+        updateXdBalance(xdBalance - spinCost);
+
+        // Calculate rotation
+        const pointerOffset = 90; // offset angle due to the position of the yellow pointer indicating the winning segment
         const winningSegmentIndex = segments.indexOf(winningSegment);
         const segmentsAngle = 360 / segments.length;
-        const landingAngle = winningSegmentIndex * segmentsAngle + (segmentsAngle / 2);
-        
-        const randomOffset = (Math.random() - 0.5) * segmentsAngle * 0.8;
-        const finalAngle = 360 * 10 + landingAngle + randomOffset;
-        
-        wheelContainer.style.transform = `rotate(${finalAngle}deg)`;
-        
-        setTimeout(() => {
-            isSpinning = false;
-            spinBtn.textContent = 'Spin for 999 XD';
-            watchAdBtn.disabled = false;
-            
-            if (winningSegment.text === 'Jackpot') {
-                spinMessageEl.textContent = `Congratulations! You won the Jackpot!`;
-            } else {
-                updateXdBalance(xdBalance + winningSegment.value);
-                spinMessageEl.textContent = `Congratulations! You won ${winningSegment.text}!`;
-            }
-            
-            if (typeof triggerConfetti === 'function') {
-                triggerConfetti();
-            }
+        const landingAngle = (360 - (winningSegmentIndex * segmentsAngle)) - pointerOffset - (segmentsAngle / 2);
+        finalAngle += landingAngle - finalAngle + 360 * 10;
+        fullSpinAngle += 360
 
-            spinBtn.removeEventListener('click', spinWheelForFree);
-            spinBtn.addEventListener('click', spinWheel);
+        wheelContainer.style.transform = `rotate(${finalAngle + (fullSpinAngle * 10)}deg)`;
+
+        setTimeout(() => {
+            // Add winnings
+            updateXdBalance(xdBalance + winningSegment.value);
+
+            isSpinning = false;
+            free = false;
+            spinBtn.disabled = false;
+            watchAdBtn.disabled = false;
+            spinBtn.textContent = 'Spin for 999 XD';
+
+
+            spinMessageEl.textContent =
+                winningSegment.text === 'Jackpot'
+                    ? `Congratulations! You won the Jackpot!`
+                    : `Congratulations! You won ${winningSegment.text}!`;
+
+            winningSegment = null;
+            cumulativeChance = 0;
         }, 4000);
     }
 
-    spinBtn.addEventListener('click', spinWheel);
+    // Placeholder for ad functionality
+    // Trigger ad when "Watch Ad" button is clicked
+    // --- Replace your old watchAd() function with this ---
+    function watchAd() {
+        // Load Monetag ad script dynamically
+        let s = document.createElement('script');
+        s.src = 'https://fpyf8.com/88/tag.min.js';
+        s.setAttribute('data-zone', '163258');
+        s.async = true;
+        s.setAttribute('data-cfasync', 'false');
+        document.body.appendChild(s);
+
+        // Wait for ad duration before giving free spin
+        setTimeout(() => {
+            alert("You've earned a free spin!");
+            spinBtn.textContent = 'Spin (Free)';
+            spinBtn.disabled = false;
+            watchAdBtn.disabled = true;
+            free = true
+
+            // spinBtn.removeEventListener('click', spinWheel);
+            // spinBtn.addEventListener('click', spinWheel(free));
+        }, 5000); // Change 5000 to match your ad length in ms
+    }
+
+
+    //This spinWheelForFree function ⬇️ is almost identical to the regular spinWheel function above ⬆️
+
+    // function spinWheelForFree() {
+    //     if (isSpinning) return;
+    //     isSpinning = true;
+    //     spinBtn.disabled = true;
+    //     spinMessageEl.textContent = "";
+
+    //     const randomChance = Math.random() * totalChance;
+    //     let cumulativeChance = 0;
+    //     let winningSegment = null;
+    //     for (const segment of segments) {
+    //         cumulativeChance += segment.chance;
+    //         if (randomChance < cumulativeChance) {
+    //             winningSegment = segment;
+    //             break;
+    //         }
+    //     }
+
+    //     const winningSegmentIndex = segments.indexOf(winningSegment);
+    //     const segmentsAngle = 360 / segments.length;
+    //     const landingAngle = winningSegmentIndex * segmentsAngle + (segmentsAngle / 2);
+
+    //     const randomOffset = (Math.random() - 0.5) * segmentsAngle * 0.8;
+    //     const finalAngle = 360 * 10 + landingAngle + randomOffset;
+
+    //     wheelContainer.style.transform = `rotate(${finalAngle}deg)`;
+
+    //     setTimeout(() => {
+    //         isSpinning = false;
+    //         spinBtn.textContent = 'Spin for 999 XD';
+    //         watchAdBtn.disabled = false;
+
+    //         if (winningSegment.text === 'Jackpot') {
+    //             spinMessageEl.textContent = `Congratulations! You won the Jackpot!`;
+    //         } else {
+    //             updateXdBalance(xdBalance + winningSegment.value);
+    //             spinMessageEl.textContent = `Congratulations! You won ${winningSegment.text}!`;
+    //         }
+
+    //         if (typeof triggerConfetti === 'function') {
+    //             triggerConfetti();
+    //         }
+
+    //         spinBtn.removeEventListener('click', spinWheelForFree);
+    //         spinBtn.addEventListener('click', spinWheel);
+    //     }, 4000);
+    // }
+
+    spinBtn.addEventListener('click', () => spinWheel(free));
     watchAdBtn.addEventListener('click', watchAd);
 
     // --- Confetti VFX (existing code) ---
@@ -457,7 +475,7 @@ function watchAd() {
                 p.y += p.vy;
                 p.vy += 0.05;
                 p.opacity -= 0.01;
-                
+
                 confettiCtx.save();
                 confettiCtx.translate(p.x, p.y);
                 confettiCtx.rotate(p.rot * Math.PI / 180);
@@ -502,7 +520,7 @@ function calculateWithdrawAmounts() {
 
 async function handleWithdraw(event) {
     event.preventDefault();
-    
+
     const rbxAmount = parseFloat(redeemAmountRbxInput.value) || 0;
     const robloxUsername = robloxUsernameInput.value.trim();
     const xdNeeded = rbxAmount * RBX_TO_XD_RATE;
@@ -621,7 +639,7 @@ if (menuBtn && sidebar && closeMenuBtn) {
     menuBtn.addEventListener('click', () => {
         sidebar.classList.toggle('translate-x-full');
         sidebar.classList.toggle('translate-x-0');
-        
+
         // Animate hamburger icon
         const spans = document.querySelectorAll('.hamburger-icon span');
         if (sidebar.classList.contains('translate-x-0')) {
