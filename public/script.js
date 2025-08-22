@@ -44,7 +44,7 @@ const analytics = getAnalytics(app);
 
 let userId = '';
 let userEmail = '';
-let xdBalance = 100000;
+let xdBalance = 0;
 let userReferralCode = '';
 let referredBy = null;
 let isSpinning = false;
@@ -306,7 +306,7 @@ if (wheelCanvas) {
     let fullSpinAngle = 0; // make the wheel spin 10 times
     let finalAngle = 0; //made the finalAngle variable global so it won't reset on every call
 
-    function spinWheel(free) {
+    function spinWheel() {
         if (isSpinning) return;
         //spins the wheel only when balance>cost or when free is "true"
         if ((xdBalance < spinCost) && free == false) {
@@ -332,7 +332,7 @@ if (wheelCanvas) {
         }
 
         // Deduct spin cost
-        updateXdBalance(xdBalance - spinCost);
+        free ? console.log('hello') : (updateXdBalance(xdBalance - spinCost));
 
         // Calculate rotation
         const pointerOffset = 90; // offset angle due to the position of the yellow pointer indicating the winning segment
@@ -350,6 +350,8 @@ if (wheelCanvas) {
 
             isSpinning = false;
             free = false;
+            console.log(free);
+            
             spinBtn.disabled = false;
             watchAdBtn.disabled = false;
             spinBtn.textContent = 'Spin for 999 XD';
@@ -369,25 +371,36 @@ if (wheelCanvas) {
     // Trigger ad when "Watch Ad" button is clicked
     // --- Replace your old watchAd() function with this ---
     function watchAd() {
-        // Load Monetag ad script dynamically
-        let s = document.createElement('script');
-        s.src = 'https://fpyf8.com/88/tag.min.js';
-        s.setAttribute('data-zone', '163258');
-        s.async = true;
-        s.setAttribute('data-cfasync', 'false');
-        document.body.appendChild(s);
+        // Remove previous ad if exists
+        let oldAd = document.getElementById("hilltopads-script");
+        if (oldAd) oldAd.remove();
 
-        // Wait for ad duration before giving free spin
+        // Create container for ad if not exists
+        let adContainer = document.getElementById("hilltopads-container");
+        if (!adContainer) {
+            adContainer = document.createElement("div");
+            adContainer.id = "hilltopads-container";
+            document.body.appendChild(adContainer);
+        }
+
+        // Load HilltopAds script dynamically
+        let s = document.createElement("script");
+        s.src = "https://enviousgarbage.com/d.mjFxzndMGBNTvtZvGeUa/gegm/9PuYZ/UkljkwPbTJYH1JO/T/kQ3FMuz/MGtiNqjRUX5lOXTDcMzINvAV"; // replace 12345 with your zone ID
+        s.id = "hilltopads-script";
+        s.async = true;
+        s.setAttribute("data-cfasync", "false");
+        adContainer.appendChild(s);
+
+        // Give reward after estimated ad duration
         setTimeout(() => {
             alert("You've earned a free spin!");
-            spinBtn.textContent = 'Spin (Free)';
+            spinBtn.textContent = "Spin (Free)";
             spinBtn.disabled = false;
             watchAdBtn.disabled = true;
-            free = true
-
-            // spinBtn.removeEventListener('click', spinWheel);
-            // spinBtn.addEventListener('click', spinWheel(free));
-        }, 5000); // Change 5000 to match your ad length in ms
+            free = true;
+            console.log(free);
+            
+        }, 1000); // adjust to match average video/ad length (e.g. 15 sec)
     }
 
 
@@ -440,7 +453,7 @@ if (wheelCanvas) {
     //     }, 4000);
     // }
 
-    spinBtn.addEventListener('click', () => spinWheel(free));
+    spinBtn.addEventListener('click', () => spinWheel());
     watchAdBtn.addEventListener('click', watchAd);
 
     // --- Confetti VFX (existing code) ---
