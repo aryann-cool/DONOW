@@ -400,7 +400,7 @@ if (wheelCanvas) {
             free = true;
             console.log(free);
             
-        }, 1000); // adjust to match average video/ad length (e.g. 15 sec)
+        }, 10000);
     }
 
 
